@@ -1,0 +1,8 @@
+{
+  "name": "EduTrack - Gestión Universitaria",
+  "description": "Sistema profesional para profesores: control de asistencia, evaluación de estudiantes y exportación a Excel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
