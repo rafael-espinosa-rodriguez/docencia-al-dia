@@ -288,7 +288,7 @@ export const MonthlyReportPdfModal: React.FC<MonthlyReportPdfModalProps> = ({
               <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200 text-xs">
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-mono block">Asignatura:</span>
-                  <strong className="text-slate-800 text-[11.5px] truncate block">{course.name}</strong>
+                  <strong className="text-slate-800 text-[11.5px] whitespace-normal break-words block">{course.name}</strong>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-mono block">Modalidad:</span>
@@ -320,8 +320,8 @@ export const MonthlyReportPdfModal: React.FC<MonthlyReportPdfModalProps> = ({
                     <th className="py-2 px-1 text-center font-bold border border-[#0f275e]" title="Ausentes">A</th>
                     <th className="py-2 px-2 text-center font-bold border border-[#0f275e]">% Mes</th>
                     {evaluations.slice(0, 3).map(ev => (
-                      <th key={ev.id} className="py-2 px-2 text-center font-bold border border-[#0f275e] truncate max-w-[60px]" title={ev.name}>
-                        {ev.name.length > 8 ? ev.name.substring(0, 7) + '.' : ev.name}
+                      <th key={ev.id} className="py-2 px-2 text-center font-bold border border-[#0f275e] whitespace-normal break-words min-w-[72px]" title={ev.name}>
+                        {ev.name}
                       </th>
                     ))}
                     <th className="py-2 px-2 text-center font-bold border border-[#0f275e]">Prom.</th>

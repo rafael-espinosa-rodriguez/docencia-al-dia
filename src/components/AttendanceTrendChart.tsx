@@ -98,7 +98,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({ atte
           </span>
         </div>
 
-        <div className="bg-slate-50 dark:bg-[#080d1a] p-2 rounded-lg border border-slate-200 dark:border-slate-800 truncate">
+        <div className="bg-slate-50 dark:bg-[#080d1a] p-2 rounded-lg border border-slate-200 dark:border-slate-800">
           <span className="text-[9.5px] uppercase font-mono font-bold text-slate-400 block">Pico Máx.</span>
           <span className="text-base font-serif font-bold text-emerald-600 dark:text-emerald-400">
             {metrics.bestSession ? `${metrics.bestSession.attendanceRate}%` : '—'}

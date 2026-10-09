@@ -114,10 +114,10 @@ export function computeMonthlyReportData({
 
     totalAttSum += monthAttendancePct;
 
-    // Estado institucional
+    // Estado institucional (escala oficial 2–5, aprueba con 3)
     let status: MonthlyStudentRow['status'] = 'Sin Datos';
     if (gradeSummary.average !== null) {
-      const isGradeApproved = gradeSummary.average >= 10.5 || (gradeSummary.average <= 10 && gradeSummary.average >= 5.5);
+      const isGradeApproved = gradeSummary.average >= 3;
       if (monthAttendancePct < 75 || stGlobalAtt.percentage < 75) {
         status = 'Riesgo Asistencia';
         atRiskCount++;

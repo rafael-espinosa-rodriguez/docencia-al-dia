@@ -137,7 +137,7 @@ export const StudentAttendanceCard: React.FC<StudentAttendanceCardProps> = ({
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h4 className="font-serif font-bold text-xs text-slate-900 dark:text-white truncate">
+              <h4 className="font-serif font-bold text-xs text-slate-900 dark:text-white whitespace-normal break-words">
                 {student.name}
               </h4>
               {hasExcessiveAbsences && (

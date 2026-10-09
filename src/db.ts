@@ -40,7 +40,7 @@ export interface Evaluation {
   courseId: number;
   name: string; // Ej: "Evaluación 1", "Prueba Final", "Taller 1"
   weight?: number; // Ponderación en % (ej: 20)
-  maxScore?: number; // Nota máxima (por defecto 20 o 10 o 100)
+  maxScore?: number; // Nota máxima (escala oficial fija: 5)
 }
 
 export interface Grade {
@@ -172,17 +172,17 @@ export class EduTrackDatabase extends Dexie {
       });
     }
 
-    // Evaluaciones requeridas para CD
+    // Evaluaciones requeridas para CD (escala oficial 2–5)
     const eval1Id = await this.evaluations.add({
       courseId: courseCdId,
       name: 'Evaluación 1',
-      maxScore: 20
+      maxScore: 5
     }) as number;
 
     const evalFinalId = await this.evaluations.add({
       courseId: courseCdId,
       name: 'Prueba Final',
-      maxScore: 20
+      maxScore: 5
     }) as number;
 
     // Asistencia de muestra para CD
@@ -199,14 +199,14 @@ export class EduTrackDatabase extends Dexie {
       }
     }
 
-    // Calificaciones de muestra para CD
+    // Calificaciones de muestra para CD (escala 2–5)
     const sampleGrades = [
-      [18, 17],
-      [15, 16],
-      [12, 14],
-      [19, 20],
-      [10, 11],
-      [16, 18]
+      [5, 4],
+      [4, 3],
+      [3, 3],
+      [5, 5],
+      [2, 3],
+      [4, 5]
     ];
 
     for (let i = 0; i < studentIdsCD.length; i++) {

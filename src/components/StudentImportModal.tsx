@@ -191,7 +191,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
               <div className="max-h-40 overflow-y-auto bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs divide-y divide-slate-100">
                 {parsedPreview.slice(0, 15).map((p, idx) => (
                   <div key={idx} className="py-1 flex items-center justify-between">
-                    <span className="font-medium text-slate-800 truncate">{p.name}</span>
+                    <span className="font-medium text-slate-800 whitespace-normal break-words min-w-0">{p.name}</span>
                     {p.code && <span className="text-[10px] text-slate-400 font-mono">{p.code}</span>}
                   </div>
                 ))}

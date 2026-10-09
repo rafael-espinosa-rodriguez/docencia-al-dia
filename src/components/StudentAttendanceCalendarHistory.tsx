@@ -362,7 +362,7 @@ export const StudentAttendanceCalendarHistory: React.FC<StudentAttendanceCalenda
                   }`}
                 >
                   <div className="min-w-0">
-                    <p className={`text-xs font-semibold truncate ${isSelected ? 'text-blue-900 dark:text-blue-200 font-bold' : 'text-slate-900 dark:text-slate-100'}`}>
+                    <p className={`text-xs font-semibold whitespace-normal break-words ${isSelected ? 'text-blue-900 dark:text-blue-200 font-bold' : 'text-slate-900 dark:text-slate-100'}`}>
                       {st.name}
                     </p>
                     <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
@@ -913,7 +913,7 @@ export const StudentAttendanceCalendarHistory: React.FC<StudentAttendanceCalenda
                         </div>
 
                         {inc.note && inc.note.trim().length > 0 ? (
-                          <p className="text-xs text-slate-600 dark:text-slate-300 font-sans mt-0.5 italic line-clamp-1">
+                          <p className="text-xs text-slate-600 dark:text-slate-300 font-sans mt-0.5 italic line-clamp-2">
                             &ldquo;{inc.note}&rdquo;
                           </p>
                         ) : (

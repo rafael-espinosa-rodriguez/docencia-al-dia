@@ -6,7 +6,6 @@ import {
   Check, 
   Copy, 
   Share2, 
-  ShieldCheck, 
   ChevronDown, 
   ChevronUp, 
   AlertCircle, 
@@ -64,7 +63,10 @@ export const ArchivosScreen: React.FC<ArchivosScreenProps> = ({
   const [isParsing, setIsParsing] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
   const [detectedStudents, setDetectedStudents] = useState<ParsedStudentItem[]>([]);
-  const [importSuccessMessage, setImportSuccessMessage] = useState<string | null>(null);
+  // Aviso persistente del resultado de la importación: éxito o error. Solo se
+  // oculta cuando el usuario lo cierra o inicia una nueva carga.
+  const [importNotice, setImportNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const [isCommitting, setIsCommitting] = useState(false);
 
   // Mass paste text
   const [massPasteText, setMassPasteText] = useState('');
@@ -207,23 +209,40 @@ export const ArchivosScreen: React.FC<ArchivosScreenProps> = ({
 
     setIsParsing(true);
     setParseError(null);
-    setImportSuccessMessage(null);
+    setImportNotice(null);
 
     try {
       const items = await parseStudentFile(selected);
       const existingNames = new Set(students.map(s => s.name.toLowerCase().trim()));
       const filtered = items.filter(it => !existingNames.has(it.name.toLowerCase().trim()));
       setDetectedStudents(filtered.length > 0 ? filtered : items);
+      safeVibrate(20);
+      setImportNotice({
+        kind: 'success',
+        text: `Nómina «${selected.name}» leída correctamente: ${filtered.length > 0 ? filtered.length : items.length} estudiante(s) detectado(s). Revisa la vista previa y pulsa «Confirmar e Incorporar».`
+      });
     } catch (err: any) {
       setParseError(err.message || 'Error al procesar el archivo. Verifica el formato .xlsx o .csv');
+      setImportNotice({
+        kind: 'error',
+        text: `No se pudo cargar la nómina «${selected.name}»: ${err.message || 'verifica el formato .xlsx o .csv e inténtalo de nuevo.'}`
+      });
     } finally {
       setIsParsing(false);
+      // Permite volver a elegir el mismo archivo si falló la lectura.
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   const handleProcessMassPaste = () => {
     const lines = massPasteText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    if (lines.length === 0) return;
+    if (lines.length === 0) {
+      setImportNotice({
+        kind: 'error',
+        text: 'No se pudo procesar la lista: pega al menos una línea con «Apellidos y Nombres» del estudiante.'
+      });
+      return;
+    }
 
     const parsed: ParsedStudentItem[] = lines.map(line => {
       const match = line.match(/^([A-Za-z0-9\-]+)\s+(.+)$/);
@@ -234,26 +253,55 @@ export const ArchivosScreen: React.FC<ArchivosScreenProps> = ({
     });
 
     setDetectedStudents(parsed);
+    setImportNotice({
+      kind: 'success',
+      text: `Lista analizada correctamente: ${parsed.length} estudiante(s) detectado(s). Revisa la vista previa y pulsa «Confirmar e Incorporar».`
+    });
   };
 
   const handleAddManualStudent = () => {
-    if (!manualName.trim()) return;
+    if (!manualName.trim()) {
+      setImportNotice({
+        kind: 'error',
+        text: 'No se pudo agregar el alumno: escribe sus «Apellidos y Nombres» primero.'
+      });
+      return;
+    }
+    const addedName = manualName.trim();
     setDetectedStudents(prev => [
       ...prev,
-      { name: manualName.trim(), code: manualCode.trim() || undefined }
+      { name: addedName, code: manualCode.trim() || undefined }
     ]);
+    setImportNotice({
+      kind: 'success',
+      text: `«${addedName}» agregado a la vista previa. Pulsa «Confirmar e Incorporar» para guardarlo en la nómina.`
+    });
     setManualName('');
     setManualCode('');
   };
 
   const handleCommitImport = async () => {
-    if (detectedStudents.length === 0) return;
-    if (navigator.vibrate) navigator.vibrate(25);
-    await onImportStudents(detectedStudents);
-    setImportSuccessMessage(`¡${detectedStudents.length} estudiantes incorporados a la asignatura!`);
-    setDetectedStudents([]);
-    setMassPasteText('');
-    setTimeout(() => setImportSuccessMessage(null), 3000);
+    if (detectedStudents.length === 0 || isCommitting) return;
+    const count = detectedStudents.length;
+    setIsCommitting(true);
+    setImportNotice(null);
+    try {
+      await onImportStudents(detectedStudents);
+      safeVibrate([20, 40, 20]);
+      setDetectedStudents([]);
+      setMassPasteText('');
+      setImportNotice({
+        kind: 'success',
+        text: `¡Nómina cargada correctamente! ${count} estudiante(s) incorporado(s) a la asignatura.`
+      });
+    } catch (err: any) {
+      setImportNotice({
+        kind: 'error',
+        text: `No se pudo guardar la nómina: ${err?.message || 'error inesperado al escribir en la base de datos.'} Inténtalo de nuevo.`
+      });
+    } finally {
+      setIsCommitting(false);
+    }
   };
 
   return (
@@ -272,7 +320,7 @@ export const ArchivosScreen: React.FC<ArchivosScreenProps> = ({
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col min-w-0">
-            <h2 className="font-serif font-bold text-base text-slate-900 dark:text-white truncate">
+            <h2 className="font-serif font-bold text-base text-slate-900 dark:text-white whitespace-normal break-words leading-snug">
               {course.name}
             </h2>
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -354,11 +402,25 @@ export const ArchivosScreen: React.FC<ArchivosScreenProps> = ({
         </button>
       </div>
 
-      {/* Feedback Mensaje de Éxito */}
-      {importSuccessMessage && (
-        <div className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 p-3 rounded-xl text-xs font-mono font-bold flex items-center gap-2 border border-emerald-300 dark:border-emerald-800 animate-in fade-in">
-          <Check className="w-4 h-4" />
-          <span>{importSuccessMessage}</span>
+      {/* Resultado de la importación: éxito o error (persistente hasta cerrar) */}
+      {importNotice && (
+        <div className={`p-3 rounded-xl text-xs font-bold flex items-start gap-2 border animate-in fade-in ${
+          importNotice.kind === 'success'
+            ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+            : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-900'
+        }`}>
+          {importNotice.kind === 'success'
+            ? <Check className="w-4 h-4 shrink-0 mt-0.5" />
+            : <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
+          <span className="flex-1">{importNotice.text}</span>
+          <button
+            type="button"
+            onClick={() => setImportNotice(null)}
+            aria-label="Cerrar aviso"
+            className="shrink-0 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
         </div>
       )}
 
@@ -592,19 +654,6 @@ export const ArchivosScreen: React.FC<ArchivosScreenProps> = ({
               <span>Compartir Vía Correo / WhatsApp</span>
             </button>
           </div>
-
-          {/* Garantía de Confidencialidad */}
-          <div className="bg-white dark:bg-[#0f172a] rounded-xl p-3 flex items-center gap-3 border border-slate-200/80 dark:border-slate-800 academic-border">
-            <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-800 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-blue-700 dark:text-blue-400" />
-            </div>
-            <div className="flex flex-col">
-              <h5 className="font-serif font-bold text-xs text-slate-900 dark:text-white">Confidencialidad Académica</h5>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Gestión local autónoma. Las calificaciones y nóminas se procesan con total reserva y sin dependencias externas.
-              </p>
-            </div>
-          </div>
         </div>
       )}
 
@@ -788,7 +837,7 @@ export const ArchivosScreen: React.FC<ArchivosScreenProps> = ({
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                       <div className="min-w-0">
-                        <span className="font-bold text-slate-900 dark:text-white truncate block">{st.name}</span>
+                        <span className="font-bold text-slate-900 dark:text-white whitespace-normal break-words block">{st.name}</span>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">ID: {st.code || 'Auto-ID'}</span>
                       </div>
                     </div>
@@ -802,10 +851,11 @@ export const ArchivosScreen: React.FC<ArchivosScreenProps> = ({
               <button
                 type="button"
                 onClick={handleCommitImport}
-                className="w-full min-h-[48px] rounded-xl bg-blue-900 hover:bg-blue-800 dark:bg-blue-700 text-white font-medium text-xs flex items-center justify-center gap-2 active:scale-95 shadow-md transition-all mt-1"
+                disabled={isCommitting}
+                className="w-full min-h-[48px] rounded-xl bg-blue-900 hover:bg-blue-800 dark:bg-blue-700 text-white font-medium text-xs flex items-center justify-center gap-2 active:scale-95 shadow-md transition-all mt-1 disabled:opacity-60"
               >
                 <span className="material-symbols-outlined text-[18px]">save_alt</span>
-                <span>Confirmar e Incorporar a la Lista ({detectedStudents.length})</span>
+                <span>{isCommitting ? 'Guardando nómina...' : `Confirmar e Incorporar a la Lista (${detectedStudents.length})`}</span>
               </button>
             </div>
           )}

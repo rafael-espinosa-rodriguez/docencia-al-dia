@@ -220,7 +220,7 @@ export default function App() {
 
   // Import students
   const handleImportStudents = async (items: ParsedStudentItem[]) => {
-    if (!selectedCourseId) return;
+    if (!selectedCourseId) throw new Error('no hay una asignatura seleccionada.');
     for (const item of items) {
       await db.students.add({
         name: item.name,
@@ -430,8 +430,8 @@ export default function App() {
 
         {/* Título y Semestre Oficial */}
         <div className="px-4 py-2.5 flex items-center justify-between max-w-md mx-auto w-full">
-          <div className="flex items-baseline gap-2.5 min-w-0">
-            <h1 className="text-[20px] font-serif font-bold text-slate-900 dark:text-white tracking-tight truncate">
+          <div className="flex items-baseline gap-2.5 min-w-0 flex-1">
+            <h1 className="text-[20px] font-serif font-bold text-slate-900 dark:text-white tracking-tight whitespace-normal break-words leading-tight">
               {navTab === 'asignaturas' ? 'Cátedras Asignadas' :
                navTab === 'asistencia' ? 'Control de Asistencia' :
                navTab === 'evaluador' ? 'Calificaciones' : 'Actas y Archivos'}
@@ -623,7 +623,7 @@ export default function App() {
                                 <span className="material-symbols-outlined text-[13px]">room</span> Aula Magna 302
                               </span>
                             </div>
-                            <h3 className="text-[15.5px] font-serif font-bold text-slate-900 dark:text-white leading-snug truncate">
+                            <h3 className="text-[15.5px] font-serif font-bold text-slate-900 dark:text-white leading-snug whitespace-normal break-words">
                               {course.name}
                             </h3>
                             <p className="text-[12px] font-sans text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
@@ -727,7 +727,7 @@ export default function App() {
                                 <span className="material-symbols-outlined text-[13px]">date_range</span> Módulo Sabatino
                               </span>
                             </div>
-                            <h3 className="text-[15.5px] font-serif font-bold text-slate-900 dark:text-white leading-snug truncate">
+                            <h3 className="text-[15.5px] font-serif font-bold text-slate-900 dark:text-white leading-snug whitespace-normal break-words">
                               {course.name}
                             </h3>
                             <p className="text-[12px] font-sans text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
@@ -825,7 +825,7 @@ export default function App() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="material-symbols-outlined text-blue-700 dark:text-blue-400 text-[20px]">terminal</span>
-                        <span className="font-serif font-bold text-sm text-slate-900 dark:text-white truncate">
+                        <span className="font-serif font-bold text-sm text-slate-900 dark:text-white whitespace-normal break-words">
                           {currentCourse.name}
                         </span>
                       </div>
@@ -945,7 +945,7 @@ export default function App() {
                                 <div className="flex items-center gap-2 min-w-0">
                                   <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                                   <div className="min-w-0">
-                                    <span className="font-semibold text-slate-900 dark:text-white truncate block">
+                                    <span className="font-semibold text-slate-900 dark:text-white whitespace-normal break-words block">
                                       {student.name}
                                     </span>
                                     <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">

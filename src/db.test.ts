@@ -103,17 +103,17 @@ describe('EduTrackDatabase (Dexie with IndexedDB)', () => {
     const evalId = await db.evaluations.add({
       courseId,
       name: 'Evaluacion 1',
-      maxScore: 20
+      maxScore: 5
     }) as number;
 
     await db.grades.add({
       studentId: 1,
       evaluationId: evalId,
-      score: 18.5
+      score: 4
     });
 
     const grade = await db.grades.where({ studentId: 1, evaluationId: evalId }).first();
-    expect(grade?.score).toBe(18.5);
+    expect(grade?.score).toBe(4);
   });
 
   it('cascades deletion properly when removing a course', async () => {
@@ -122,7 +122,7 @@ describe('EduTrackDatabase (Dexie with IndexedDB)', () => {
     const studentId = await db.students.add({ name: 'Carlos Díaz', courseId }) as number;
     const evalId = await db.evaluations.add({ name: 'Prueba Final', courseId }) as number;
     await db.attendance.add({ studentId, courseId, date: '2026-09-30', status: 'present' });
-    await db.grades.add({ studentId, evaluationId: evalId, score: 17 });
+    await db.grades.add({ studentId, evaluationId: evalId, score: 4 });
 
     await db.deleteCourseCascade(courseId);
 

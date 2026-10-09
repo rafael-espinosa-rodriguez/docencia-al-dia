@@ -48,9 +48,9 @@ export function exportCourseDataToExcel({
     row['Tardanzas'] = attSummary.lates;
     row['% Asistencia'] = `${attSummary.percentage}%`;
 
-    // Estado estimado según promedio (escala universitaria sobre 20 o sobre 10)
+    // Estado estimado según promedio (escala oficial 2–5, aprueba con 3)
     if (gradeSummary.average !== null) {
-      const isApproved = gradeSummary.average >= 10.5 || (gradeSummary.average <= 10 && gradeSummary.average >= 5.5);
+      const isApproved = gradeSummary.average >= 3;
       row['Estado'] = isApproved ? 'Aprobado' : 'Desaprobado';
     } else {
       row['Estado'] = 'Pendiente';

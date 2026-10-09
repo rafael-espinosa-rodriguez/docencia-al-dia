@@ -64,20 +64,20 @@ describe('academicMetrics', () => {
 
     it('calculates average correctly with partial grades', () => {
       const grades: Grade[] = [
-        { studentId: 1, evaluationId: 101, score: 18 }
+        { studentId: 1, evaluationId: 101, score: 5 }
       ];
       const result = calculateStudentAverage(1, evaluations, grades);
-      expect(result.average).toBe(18);
+      expect(result.average).toBe(5);
       expect(result.completedCount).toBe(1);
     });
 
     it('calculates average with all grades', () => {
       const grades: Grade[] = [
-        { studentId: 1, evaluationId: 101, score: 14 },
-        { studentId: 1, evaluationId: 102, score: 18 }
+        { studentId: 1, evaluationId: 101, score: 3 },
+        { studentId: 1, evaluationId: 102, score: 5 }
       ];
       const result = calculateStudentAverage(1, evaluations, grades);
-      expect(result.average).toBe(16);
+      expect(result.average).toBe(4);
       expect(result.completedCount).toBe(2);
     });
   });
@@ -95,9 +95,9 @@ describe('academicMetrics', () => {
       ];
 
       const grades: Grade[] = [
-        { studentId: 1, evaluationId: 11, score: 19 },
-        { studentId: 1, evaluationId: 12, score: 20 },
-        { studentId: 2, evaluationId: 11, score: 15 }
+        { studentId: 1, evaluationId: 11, score: 5 },
+        { studentId: 1, evaluationId: 12, score: 4 },
+        { studentId: 2, evaluationId: 11, score: 3 }
       ];
 
       const attendance: Attendance[] = [
@@ -110,15 +110,15 @@ describe('academicMetrics', () => {
       expect(rows).toHaveLength(2);
       // Alphabetical order: Andrés Mora first
       expect(rows[0]['Estudiante']).toBe('Andrés Mora');
-      expect(rows[0]['Evaluacion 1']).toBe(15);
+      expect(rows[0]['Evaluacion 1']).toBe(3);
       expect(rows[0]['Prueba Final']).toBe('-');
       expect(rows[0]['% Asistencia']).toBe('0%');
 
       expect(rows[1]['Estudiante']).toBe('Camila Torres');
-      expect(rows[1]['Evaluacion 1']).toBe(19);
-      expect(rows[1]['Prueba Final']).toBe(20);
+      expect(rows[1]['Evaluacion 1']).toBe(5);
+      expect(rows[1]['Prueba Final']).toBe(4);
       expect(rows[1]['% Asistencia']).toBe('100%');
-      expect(rows[1]['Promedio Final']).toBe(19.5);
+      expect(rows[1]['Promedio Final']).toBe(4.5);
     });
   });
 });

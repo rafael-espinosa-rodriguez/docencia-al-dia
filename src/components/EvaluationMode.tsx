@@ -10,6 +10,7 @@ import {
   X
 } from 'lucide-react';
 import { db, type Course, type Evaluation, type Grade, type Semester, type Student } from '../db';
+import { GRADE_MAX, GRADE_MIN, PASS_SCORE, clampGrade, formatGrade } from '../lib/grading';
 import { Modal } from './Modal';
 
 interface EvaluationModeProps {
@@ -40,7 +41,7 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
 
   const [isNewEvalModalOpen, setIsNewEvalModalOpen] = useState(false);
   const [newEvalName, setNewEvalName] = useState('');
-  const [newEvalMaxScore, setNewEvalMaxScore] = useState('20');
+  const [newEvalMaxScore, setNewEvalMaxScore] = useState(String(GRADE_MAX));
 
   const [isEditingEvalName, setIsEditingEvalName] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');
@@ -68,14 +69,15 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
   const handleCreateEval = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEvalName.trim()) return;
-    const maxScore = parseFloat(newEvalMaxScore) || 20;
+    // Escala oficial fija 2–5: la nota máxima siempre es 5.
     const id = await db.evaluations.add({
       courseId: course.id!,
       name: newEvalName.trim(),
-      maxScore
+      maxScore: GRADE_MAX
     }) as number;
     setSelectedEvalId(id);
     setNewEvalName('');
+    setNewEvalMaxScore(String(GRADE_MAX));
     setIsNewEvalModalOpen(false);
   };
 
@@ -106,8 +108,8 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
     const numScore = typeof scoreVal === 'number' ? scoreVal : parseFloat(scoreVal);
     if (isNaN(numScore)) return;
 
-    const max = currentEval?.maxScore || 20;
-    const boundedScore = Math.min(Math.max(0, numScore), max);
+    // Escala oficial 2–5 entero: 2 desaprueba, 3 es el mínimo aprobatorio, 5 el máximo.
+    const boundedScore = clampGrade(numScore);
 
     const existing = await db.grades.where({ studentId, evaluationId: selectedEvalId }).first();
     if (existing) {
@@ -130,14 +132,8 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
     const existing = await db.grades.where({ studentId, evaluationId: selectedEvalId }).first();
     if (existing) {
       await db.grades.update(existing.id!, { notes });
-    } else {
-      await db.grades.add({
-        studentId,
-        evaluationId: selectedEvalId,
-        score: 0,
-        notes
-      });
     }
+    // Sin calificación no se crea registro: la escala 2–5 no admite nota 0.
   };
 
   const handleDeleteEvaluation = async (evalId: number) => {
@@ -167,9 +163,8 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
     setKeypadBuffer(nextBuffer);
 
     let num = parseInt(nextBuffer, 10);
-    if (isNaN(num)) num = 0;
-    const max = currentEval?.maxScore || 20;
-    if (num > max) num = max;
+    if (isNaN(num)) num = GRADE_MIN;
+    num = clampGrade(num);
 
     handleUpdateGrade(activeStudent.id!, num);
   };
@@ -182,6 +177,13 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
     } else {
       setIsStepDrawerOpen(false);
     }
+  };
+
+  // Salir del modo oral en cualquier momento, sin necesidad de terminar la lista.
+  const handleCloseStepDrawer = () => {
+    setIsStepDrawerOpen(false);
+    setViewStyle('list');
+    setKeypadBuffer('');
   };
 
   return (
@@ -212,7 +214,7 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="material-symbols-outlined text-blue-700 dark:text-blue-400 text-[20px]">account_tree</span>
-                <span className="font-serif font-bold text-sm text-slate-900 dark:text-white truncate">{course.name}</span>
+                <span className="font-serif font-bold text-sm text-slate-900 dark:text-white whitespace-normal break-words">{course.name}</span>
               </div>
               <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-blue-50 dark:bg-blue-950 text-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                 {course.modality}
@@ -264,7 +266,7 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
                     >
                       {evaluations.map(ev => (
                         <option key={ev.id} value={ev.id} className="bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 font-sans">
-                          {ev.name} (Máx: {ev.maxScore || 20})
+                          {ev.name} (Máx: {ev.maxScore || GRADE_MAX})
                         </option>
                       ))}
                       <option value="new" className="bg-white dark:bg-[#0f172a] text-blue-700 dark:text-blue-400 font-sans font-bold">
@@ -305,7 +307,7 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
             <div className="flex items-center justify-between px-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
               <span className="flex items-center gap-1 font-mono">
                 <span className="material-symbols-outlined text-[14px] text-emerald-600 dark:text-emerald-400">verified</span>
-                <span>Escala: <strong>00 – {currentEval.maxScore || 20}</strong> (Mín. Aprobatorio: <strong>11</strong>)</span>
+                <span>Escala: <strong>0{GRADE_MIN} – 0{GRADE_MAX}</strong> (Mín. Aprobatorio: <strong>0{PASS_SCORE}</strong>)</span>
               </span>
               <span className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-200 dark:border-emerald-800">
                 2026-I Ordinario
@@ -391,8 +393,8 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
               );
               const score = gradeRecord !== undefined ? gradeRecord.score : null;
               const note = gradeRecord?.notes || '';
-              const isPassed = score !== null && score >= 11;
-              const isFailed = score !== null && score < 11;
+              const isPassed = score !== null && score >= PASS_SCORE;
+              const isFailed = score !== null && score < PASS_SCORE;
 
               return (
                 <article
@@ -405,7 +407,7 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
                         {student.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-serif font-bold text-sm text-slate-900 dark:text-white truncate">
+                        <h4 className="font-serif font-bold text-sm text-slate-900 dark:text-white whitespace-normal break-words">
                           {student.name}
                         </h4>
                         <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
@@ -428,7 +430,7 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
                           : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
                       }`}
                     >
-                      {score === null ? '—' : score < 10 ? `0${score}` : score}
+                      {score === null ? '—' : formatGrade(score)}
                     </div>
                   </div>
 
@@ -450,24 +452,27 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleUpdateGrade(student.id!, 0)}
+                      onClick={() => handleUpdateGrade(student.id!, GRADE_MIN)}
                       className="min-h-[48px] rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900 font-mono font-bold text-xs active:scale-95 transition-all flex items-center justify-center"
+                      title="Desaprobado"
                     >
-                      00
+                      02
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleUpdateGrade(student.id!, 11)}
+                      onClick={() => handleUpdateGrade(student.id!, PASS_SCORE)}
                       className="min-h-[48px] rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-900 font-mono font-bold text-xs active:scale-95 transition-all flex items-center justify-center"
+                      title="Mínimo aprobatorio"
                     >
-                      11
+                      03
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleUpdateGrade(student.id!, currentEval.maxScore || 20)}
+                      onClick={() => handleUpdateGrade(student.id!, GRADE_MAX)}
                       className="min-h-[48px] rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 font-mono font-bold text-xs active:scale-95 transition-all flex items-center justify-center"
+                      title="Nota máxima"
                     >
-                      {currentEval.maxScore || 20}
+                      05
                     </button>
                   </div>
 
@@ -521,10 +526,13 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setIsStepDrawerOpen(false)}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 active:scale-95"
+                onClick={handleCloseStepDrawer}
+                aria-label="Salir del modo oral"
+                title="Salir del modo oral"
+                className="min-h-[44px] px-3 flex items-center justify-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 active:scale-95 border border-slate-200 dark:border-slate-700"
               >
                 <X className="w-4 h-4" />
+                <span className="text-xs font-bold">Salir</span>
               </button>
             </div>
 
@@ -534,8 +542,8 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
               const gradeRecord = grades.find(
                 g => g.studentId === activeStudent.id && g.evaluationId === currentEval.id
               );
-              const score = gradeRecord?.score ?? 0;
-              const isPassed = score >= 11;
+              const score = gradeRecord?.score ?? GRADE_MIN;
+              const isPassed = score >= PASS_SCORE;
 
               return (
                 <div className="bg-slate-50 dark:bg-[#080d1a] rounded-2xl p-4 flex flex-col items-center text-center gap-1.5 border border-slate-200 dark:border-slate-800">
@@ -553,7 +561,7 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
                   <div className={`mt-2 text-6xl font-mono font-bold tracking-tight ${
                     isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                   }`}>
-                    {score < 10 ? `0${score}` : score}
+                    {formatGrade(score)}
                   </div>
                   <span className={`font-mono text-xs font-bold ${
                     isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
@@ -564,9 +572,9 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
               );
             })()}
 
-            {/* Teclado Numérico Ergonómico */}
+            {/* Teclado de calificaciones (escala 2–5) */}
             <div className="grid grid-cols-3 gap-2">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'DEL', '0'].map(key => (
+              {['2', '3', '4', '5', 'DEL'].map(key => (
                 <button
                   type="button"
                   key={key}
@@ -589,6 +597,16 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Cancelar: salir del modo oral sin terminar la lista */}
+            <button
+              type="button"
+              onClick={handleCloseStepDrawer}
+              className="w-full min-h-[48px] rounded-xl bg-white dark:bg-transparent hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold text-sm flex items-center justify-center gap-2 active:scale-95 border border-rose-300 dark:border-rose-900 transition-all"
+            >
+              <X className="w-5 h-5" />
+              <span>Cancelar y salir del modo oral</span>
+            </button>
           </div>
         </div>
       )}
@@ -617,17 +635,21 @@ export const EvaluationMode: React.FC<EvaluationModeProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase mb-1">
-              Nota Máxima
+              Nota Máxima (escala oficial 2–5)
             </label>
             <input
               type="number"
               value={newEvalMaxScore}
               onChange={(e) => setNewEvalMaxScore(e.target.value)}
-              min="1"
-              max="100"
-              className="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-[#0f172a] focus:outline-hidden"
+              min={GRADE_MAX}
+              max={GRADE_MAX}
+              disabled
+              className="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-hidden opacity-80"
               required
             />
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+              Escala fija: 2 desaprueba, 3 es el mínimo aprobatorio y 5 la nota máxima.
+            </p>
           </div>
 
           <div>

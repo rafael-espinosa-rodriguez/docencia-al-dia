@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# caché de fuentes (scripts/fetch-fonts.mjs)
+scripts/.font-cache/

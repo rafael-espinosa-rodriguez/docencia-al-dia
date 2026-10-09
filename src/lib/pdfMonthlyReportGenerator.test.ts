@@ -29,10 +29,10 @@ describe('pdfMonthlyReportGenerator', () => {
   ];
 
   const dummyGrades: Grade[] = [
-    { studentId: 1, evaluationId: 1, score: 18 },
-    { studentId: 1, evaluationId: 2, score: 17 },
-    { studentId: 2, evaluationId: 1, score: 9 },
-    { studentId: 2, evaluationId: 2, score: 8 }
+    { studentId: 1, evaluationId: 1, score: 5 },
+    { studentId: 1, evaluationId: 2, score: 4 },
+    { studentId: 2, evaluationId: 1, score: 2 },
+    { studentId: 2, evaluationId: 2, score: 2 }
   ];
 
   it('computes monthly metrics accurately for target month 2026-09', () => {
@@ -51,7 +51,7 @@ describe('pdfMonthlyReportGenerator', () => {
     const st1 = data.rows.find(r => r.code === 'EST-001')!;
     expect(st1.monthPresents).toBe(2);
     expect(st1.monthAttendancePct).toBe(100);
-    expect(st1.average).toBe(17.5);
+    expect(st1.average).toBe(4.5);
     expect(st1.status).toBe('Aprobado');
 
     const st2 = data.rows.find(r => r.code === 'EST-002')!;
