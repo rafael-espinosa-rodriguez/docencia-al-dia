@@ -383,22 +383,25 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#080d1a] font-sans text-slate-800 dark:text-slate-100 flex flex-col transition-colors duration-300 antialiased selection:bg-amber-100 selection:text-amber-900 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#080d1a] font-sans text-slate-800 dark:text-slate-100 flex flex-col transition-colors duration-300 antialiased selection:bg-amber-100 selection:text-amber-900">
       {/* ========================================================= */}
       {/* HEADER SUPERIOR INSTITUCIONAL                             */}
       {/* ========================================================= */}
-      <header className="fixed top-0 inset-x-0 z-50 bg-white/95 dark:bg-[#0d1527]/95 backdrop-blur-md pt-safe border-b border-slate-200/80 dark:border-slate-800/80 shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition-colors duration-300">
+      {/* sticky (no fixed): la altura la marca el propio contenido, así que el
+          membrete nunca puede pisar el título aunque cambie la tipografía o la
+          escala de fuente del sistema. */}
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#0d1527]/95 backdrop-blur-md pt-safe border-b border-slate-200/80 dark:border-slate-800/80 shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition-colors duration-300">
         {/* Membrete Institucional */}
         <div className="px-4 pt-2.5 pb-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 max-w-md mx-auto w-full">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <span className="w-7 h-7 rounded-lg bg-blue-900 dark:bg-blue-600 flex items-center justify-center text-amber-300 shadow-xs shrink-0">
               <span className="material-symbols-outlined text-[17px]">school</span>
             </span>
-            <div className="flex flex-col">
-              <span className="font-serif text-[13px] font-bold text-slate-900 dark:text-white leading-tight">
+            <div className="flex flex-col min-w-0">
+              <span className="font-serif text-[13px] font-bold text-slate-900 dark:text-white leading-snug">
                 Docencia al Día
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans leading-tight">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-sans leading-snug break-words">
                 Gestión Académica Universitaria
               </span>
             </div>
@@ -436,7 +439,7 @@ export default function App() {
                navTab === 'asistencia' ? 'Control de Asistencia' :
                navTab === 'evaluador' ? 'Calificaciones' : 'Actas y Archivos'}
             </h1>
-            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 shrink-0">
+            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 min-w-0">
               Período Activo
             </span>
           </div>
@@ -463,7 +466,7 @@ export default function App() {
       {/* ========================================================= */}
       {/* CONTENEDOR PRINCIPAL SCROLLABLE                           */}
       {/* ========================================================= */}
-      <main className="flex-1 flex flex-col w-full px-4 pt-[114px] pb-24 bg-slate-50 dark:bg-[#080d1a] transition-colors duration-300">
+      <main className="flex-1 flex flex-col w-full px-4 pb-24 bg-slate-50 dark:bg-[#080d1a] transition-colors duration-300">
         <div className="flex flex-col w-full gap-4 max-w-md mx-auto">
           {/* ===================================================== */}
           {/* PESTAÑA 1: CÁTEDRAS ASIGNADAS (DASHBOARD RECTORAL)    */}

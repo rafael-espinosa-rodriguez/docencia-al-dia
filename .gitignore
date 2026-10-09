@@ -9,3 +9,7 @@ coverage/
 
 # caché de fuentes (scripts/fetch-fonts.mjs)
 scripts/.font-cache/
+
+# firma de release (keystore local, nunca al repositorio)
+android/keystore.properties
+android/keystore/

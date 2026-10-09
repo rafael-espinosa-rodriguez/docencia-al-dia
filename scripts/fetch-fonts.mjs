@@ -283,25 +283,18 @@ async function main() {
     ).toFixed(1)} KB`,
   );
 
-  rules.push(
-    [
-      '@font-face {',
-      "  font-family: 'Material Symbols Outlined';",
-      '  font-style: normal;',
-      '  font-weight: 100 700;',
-      `  src: url('/fonts/${iconFile}') format('woff2');`,
-      '  font-display: block;',
-      '}',
-    ].join('\n'),
-  );
-
   const header = [
     '/* Archivo generado por scripts/fetch-fonts.mjs — no editar a mano. */',
     '/* Fuentes auto-hospedadas: la app debe funcionar 100% offline. */',
+    '/* Los iconos NO se declaran aquí: se incrustan como data URI en', '   src/icon-font.embedded.css (scripts/embed-icon-font.mjs). */',
     '',
   ].join('\n');
   await writeFile(CSS_OUT, `${header}${rules.join('\n\n')}\n`, 'utf8');
   console.log(`\n${rules.length} @font-face escritos en src/fonts.css`);
+
+  // El icono viaja dentro del CSS: sin dependencia de rutas externas.
+  const { embedIconFont } = await import('./embed-icon-font.mjs');
+  await embedIconFont();
 }
 
 main().catch((err) => {

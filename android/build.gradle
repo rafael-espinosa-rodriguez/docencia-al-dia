@@ -27,3 +27,16 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+// Android Lint (lintVital, obligatorio en assembleRelease) rompe con rutas que
+// contienen espacios: "Trailing char < > at index 22: D:/PROYECTOS NO BORRAR".
+// Se desactiva solo la comprobación automática al compilar release; el lint
+// completo sigue disponible con `gradlew lint`.
+subprojects { p ->
+    p.afterEvaluate {
+        def androidExt = p.extensions.findByName('android')
+        if (androidExt != null && androidExt.hasProperty('lint')) {
+            androidExt.lint.checkReleaseBuilds = false
+        }
+    }
+}
